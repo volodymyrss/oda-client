@@ -30,7 +30,12 @@ except Exception as e:
 
 
 def get_workflow_url(workflow):
-    workflow_routes = dict([ r.split("=") for r in os.environ.get('WORKFLOW_ROUTES','').split(",") if len(r.split("=")) == 2 ])
+    print('exploiting workflow routes', os.environ.get('WORKFLOW_ROUTES',''))
+
+    if os.environ.get('WORKFLOW_ROUTES'):
+        workflow_routes = dict([ r.split("=") for r in os.environ.get('WORKFLOW_ROUTES','').split(",") ])
+    else:
+        workflow_routes = {}
 
     if workflow in workflow_routes:
         return workflow_routes[workflow]+"/api/v1.0/get/{}"
@@ -61,58 +66,60 @@ def evaluate(router, *args, **kwargs):
 
     if router == "odahub":
         kwargs['_async_request'] = 'yes'
-
         url_template = get_workflow_url(args[0])
 
         url = url_template.format(*args[1:])
         print("url:",url)
 
-        ntries = 30
+        ntries = 100
+
+        output = None
+
         while ntries > 0:
             try:
                 print("towards",ntries,url,kwargs)
                 c=requests.get(
                     url=url,
-                    params=kwargs,
+                    params={**kwargs, '_async_request': True},
                     auth=requests.auth.HTTPBasicAuth("cdci", open("/cdci-resources/reproducible").read().strip())
                 )
-                print("decoding text",c.text[:1000])
+                print("decoding",c.text)
 
                 try:
-                    raw = c.json()
-                    output = raw.get('output', raw['data']['output'])
+                    c_j = c.json()
+                    if c_j.get('workflow_status') != 'done':
+                        time.sleep(5)
+                        ntries -= 1
+                        continue
+                    output = c_j.get('data').get('output')
                 except Exception as ed:
                     print("problem decoding:", repr(ed))
                     print("raw output:",c.text)
                     logstasher.log(dict(event='failed to decode output',raw_output=c.text, exception=repr(ed)))
                     raise
 
-                if raw.get('workflow_status') == "done":
-                    print("done, status", raw.get('workflow_status'))
-                    print("keys in raw", raw.keys())
-                    print("output",repr(output))
-                    break
-                else:
-                    print("not done", raw.get('workflow_status'))
+                break
 
             except Exception as e:
                 print("problem from service", repr(e))
 
                 logstasher.log(dict(event='problem evaluating',exception=repr(e)))
                 
-            if ntries <= 1:
-                if sentry_sdk:
-                    sentry_sdk.capture_exception()
-                raise
+                if ntries <= 1:
+                    if sentry_sdk:
+                        sentry_sdk.capture_exception()
+                    raise
 
-            time.sleep(5)
+                time.sleep(5)
 
-            ntries -= 1
+                ntries -= 1
 
                 #raise
     else:
         raise NotImplemented
 
+    if logstasher and output is None:
+        logstasher.log(dict(event='output is None'))
 
     if logstasher:
         logstasher.log(dict(event='done'))
