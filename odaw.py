@@ -15,7 +15,7 @@ try:
     import logstash
     logstasher = logstash.LogStasher(logstash_entrypoint)
 except Exception as e:
-    print("unable to setup logstash",repr(e))
+    print("unable to setup logstash: ignoring",repr(e))
 
     logstasher = None
 
@@ -129,3 +129,39 @@ def evaluate(router, *args, **kwargs):
 
     return output
 
+def evaluate_console():
+    import argparse
+
+    argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("router")
+        
+    args, ukargs = parser.parse_known_args()
+
+    print(args, ukargs)
+
+    pargs=[]
+    kwargs={}
+    for a in ukargs:
+        if a.startswith("--"):
+            k, v = a[2:].split("=", 1)
+            kwargs[k] = v
+        else:
+            pargs.append(a)
+
+    print(pargs, kwargs)
+    
+    return evaluate(args.router, *pargs, **kwargs)
+
+def rdf():
+    pass
+
+def apidocs():
+    pass
+
+
+def module():
+    pass
+
+if __name__ == "__main__":
+    evaluate_console()
