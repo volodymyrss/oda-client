@@ -157,10 +157,15 @@ def rdf():
     pass
 
 def apidocs():
-    pass
+    if router == "odahub":
+        requests.get("https://oda-workflows-fermilat.odahub.io/apispec_1.json
 
 
 def module():
+    pass
+
+def module():
+    #symmetric interoperability with astroquery
     pass
 
 if __name__ == "__main__":
