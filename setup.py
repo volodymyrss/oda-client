@@ -3,7 +3,7 @@ from setuptools import setup
 
 setup(
         name='oda-workflows',
-        version='1.0.0',
+        version='1.0.1',
         py_modules= ['odaw','service_exception'],
         url="http://odahub.io",
         package_data     = {
