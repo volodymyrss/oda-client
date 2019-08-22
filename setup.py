@@ -2,10 +2,10 @@ from setuptools import setup
 
 
 setup(
-        name='oda-workflows',
+        name='oda',
         version_format='{tag}.dev{commitcount}+{gitsha}',
-        py_modules= ['workflows','service_exception'],
         url="http://odahub.io",
+        packages = ['oda'],
         package_data     = {
             "": [
                 "*.txt",
