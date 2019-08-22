@@ -3,7 +3,7 @@ from setuptools import setup
 
 setup(
         name='oda-workflows',
-        version='1.0.2',
+        version_format='{tag}.dev{commitcount}+{gitsha}',
         py_modules= ['workflows','service_exception'],
         url="http://odahub.io",
         package_data     = {
@@ -19,4 +19,6 @@ setup(
         },
         license='Creative Commons Attribution-Noncommercial-Share Alike license',
         long_description=open('README.md').read(),
+
+        setup_requires=['setuptools-git-version'],
         )
