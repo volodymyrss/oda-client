@@ -3,3 +3,6 @@ dist:
 
 upload: dist
 	twine upload --verbose --skip-existing -r oda dist/*
+
+test:
+	python -m pytest tests -sv
