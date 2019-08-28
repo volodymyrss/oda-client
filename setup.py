@@ -1,24 +1,19 @@
 from setuptools import setup
+import ast
+import sys
 
+setup_requires = ['setuptools >= 30.3.0', 'setuptools-git-version']
+if {'pytest', 'test', 'ptr'}.intersection(sys.argv):
+    setup_requires.append('pytest-runner')
 
-setup(
-        name='oda',
-        version_format='{tag}.dev{commitcount}+{gitsha}',
-        url="http://odahub.io",
-        packages = ['oda'],
-        package_data     = {
-            "": [
-                "*.txt",
-                "*.md",
-                "*.rst",
-                "*.py"
-                ]
-            },
-        entry_points = {
-            'console_scripts': ['ew=oda.router:evaluate_console'],
-        },
-        license='Creative Commons Attribution-Noncommercial-Share Alike license',
-        long_description=open('README.md').read(),
+# Get docstring and version without importing module
+with open('oda/__init__.py') as f:
+    mod = ast.parse(f.read())
 
-        setup_requires=['setuptools-git-version'],
-        )
+__doc__ = ast.get_docstring(mod)
+__version__ = mod.body[-1].value.s
+
+setup(description=__doc__.splitlines()[1],
+      long_description=__doc__,
+      version=__version__,
+      setup_requires=setup_requires)
