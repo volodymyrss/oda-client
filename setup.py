@@ -11,9 +11,9 @@ with open('oda/__init__.py') as f:
     mod = ast.parse(f.read())
 
 __doc__ = ast.get_docstring(mod)
-__version__ = mod.body[-1].value.s
+#__version__ = mod.body[-1].value.s
 
 setup(description=__doc__.splitlines()[1],
       long_description=__doc__,
-      version=__version__,
+      version_format = '{tag}.dev{commitcount}+{gitsha}', 
       setup_requires=setup_requires)
