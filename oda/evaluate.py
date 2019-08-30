@@ -12,6 +12,8 @@ from collections import OrderedDict
 
 import oda.cache as cache
 
+from oda.exceptions import WorkflowIncomplete 
+
 from oda.graph import subgraph_from
 
 #import oda.sentry as sentry
@@ -156,35 +158,39 @@ def evaluate_graph(target, *graphs):
 def evaluate(router, *args, **kwargs):
     ntries = 100
 
+    _async_return = kwargs.get("_async_return", False)
+
     key = json.dumps((router, args, OrderedDict(sorted(kwargs.items()))))
 
     log_context(dict(router=router, args=args, kwargs=kwargs))
 
-    try:
-        if router.startswith("oda"):
-            module_name = router
-        else:
-            module_name = 'oda'+router
+    if router.startswith("oda"):
+        module_name = router
+    else:
+        module_name = 'oda'+router
 
-        odamodule = importlib.import_module(module_name)
+    odamodule = importlib.import_module(module_name)
 
-        while ntries > 0:
-            try:
-                output = odamodule.evaluate(*args, **kwargs)
-                break
-            except Exception as e:
-                log(dict(event='problem evaluating',exception=repr(e)))
+    while ntries > 0:
+        try:
+            output = odamodule.evaluate(*args, **kwargs)
+            break
+        except WorkflowIncomplete as e:
+            log("workflow incomplete:", e)
+            
+            if _async_return:
+                raise
+        except Exception as e:
+            log(dict(event='problem evaluating',exception=repr(e)))
 
-                if ntries <= 1:
-                    #if sentry_sdk:
-                    #    sentry_sdk.capture_exception()
-                    raise
+        if ntries <= 1:
+            #if sentry_sdk:
+            #    sentry_sdk.capture_exception()
+            raise
 
-                time.sleep(5)
+        time.sleep(5)
 
-                ntries -= 1
-    except:
-        raise
+        ntries -= 1
 
     log(dict(event='output is None'))
 
