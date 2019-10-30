@@ -11,7 +11,7 @@ def oda():
 def info():
     click.echo("oda evaluate")
 
-@oda.command(aliases=["ev","eva","eval"])
+@oda.command(aliases=["ev","eva","eval", "evaluate"])
 @click.argument('target', nargs=1)
 @click.argument('graphs', nargs=-1)
 def evaluate_cli(target, graphs):

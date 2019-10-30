@@ -53,6 +53,8 @@ def get_default_graphs():
         graphs.append(url_base + "/api/v1.0/rdf")
     
         G = rdflib.Graph()
+
+        print("will load", graphs[-1])
         load_graph(G, graphs[-1])
 
         for w in G.query("SELECT ?w WHERE { ?w rdfs:subClassOf anal:WebDataAnalysis }"):
@@ -74,16 +76,26 @@ default_prefix="""
 @prefix xml: <http://www.w3.org/XML/1998/namespace> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
-@prefix r: <http://local#> .
+@prefix : <http://local#> .
 
 """
+
+def parse_shortcuts(graph_serial):
+    g = graph_serial.replace("="," an:equalTo ")
+    if not g.strip().endswith("."):
+        g += " ."
+
+    return g
 
 def load_graph(G, serial):
     if serial.startswith("https://"):
         G.load(serial)
     else:
         log("will load: %s", serial, level="DEBUG")
-        G.parse(data=default_prefix+serial, format="turtle")
+        G.parse(
+            data=default_prefix + parse_shortcuts(serial), 
+            format="turtle"
+        )
 
 def evaluate_graph(target, *graphs):
     """
@@ -92,11 +104,12 @@ def evaluate_graph(target, *graphs):
     G = rdflib.Graph()
 
     for graph in list(graphs) + list(get_default_graphs()):
+        print("will load", graph)
         load_graph(G, graph)
     
-    load_graph(G, "r:{t} rdfs:subClassOf an:{t} .".format(t=target))
+    load_graph(G, ":{t} rdfs:subClassOf an:{t} .".format(t=target))
 
-    q = "SELECT ?parent_analysis WHERE { r:%s rdfs:subClassOf ?parent_analysis . }"%target
+    q = "SELECT ?parent_analysis WHERE { :%s rdfs:subClassOf ?parent_analysis . }"%target
     print(q)
 
     parentname=None
@@ -113,22 +126,29 @@ def evaluate_graph(target, *graphs):
         url = url_uri[0].toPython()
         log("url: %s", url)
     
+    odahub_services = []
+
     for uri in G.query("""SELECT DISTINCT ?url WHERE {an:%s an:odahubService ?url}"""%parentname):
         odahub_service = uri[0].toPython()
+        log("found comptatible odahub service: %s", odahub_service)
+        odahub_services.append(odahub_service)
+
+    if odahub_services == []:
+        raise Exception("no services found for", target, parentname)
 
     params={}
     
-    for param in G.query("""SELECT DISTINCT ?param WHERE {an:%s rdfs:subClassOf ?b .?b owl:onProperty onto:expects . ?b owl:someValuesFrom ?param .}"""%parentname):
+    for param in G.query("""SELECT DISTINCT ?param WHERE {an:%s rdfs:subClassOf ?b . ?b owl:onProperty onto:expects . ?b owl:someValuesFrom ?param .}"""%parentname):
         ns, paramname = param[0].split("#")
-        print("param:", ns, paramname)
+        log("expects some values from: %s, %s", ns, paramname)
         
         for r in itertools.chain(G.query("""SELECT ?value WHERE {an:%s an:equalTo ?value .}"""%(paramname)),
-                                 G.query("""SELECT ?value WHERE {r:%s an:equalTo ?value .}"""%(paramname)),
+                                 G.query("""SELECT ?value WHERE {:%s an:equalTo ?value .}"""%(paramname)),
                                  G.query("""SELECT ?value WHERE {?a an:equalTo ?value . ?a rdfs:subClassOf an:%s .}"""%(paramname))):
 
             value = r[0].toPython()
 
-            print("with value", r, value)
+            log("with value %s %s", r, value)
 
             params[paramname] = value
         
@@ -144,11 +164,11 @@ def evaluate_graph(target, *graphs):
 
     r_h = hashlib.md5(r_str.encode('utf-8')).hexdigest()[:8]
 
-    load_graph(G, "r:%s an:equalTo an:%s ."%(target, r_h))
+    load_graph(G, ":%s an:equalTo an:%s ."%(target, r_h))
 
     G.serialize(target+".ttl", format="turtle")
 
-    nG = subgraph_from(G, "r:"+target)
+    nG = subgraph_from(G, ":"+target)
     nG.serialize(target+"-connected.ttl", format="turtle")
     
     
@@ -156,6 +176,9 @@ def evaluate_graph(target, *graphs):
     
 
 def evaluate(router, *args, **kwargs):
+    if router == "graph":
+        return evaluate_graph(*args)    
+
     ntries = 100
 
     _async_return = kwargs.get("_async_return", False)
