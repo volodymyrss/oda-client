@@ -2,6 +2,7 @@
 
 import json
 import os
+import base64
 import requests
 import time
 import rdflib
@@ -173,6 +174,16 @@ def evaluate_graph(target, *graphs):
     
     
 
+def extract_output_files(r):
+    for k,v in r.items():
+        if k+"_content" in r:
+            try:
+                bc = base64.b64decode(r[k+'_content'])
+                open(v,"wb").write(bc)
+            except Exception as e:
+                print("problem decoding", k)
+            else:
+                print("writing", v)
     
 
 def evaluate(router, *args, **kwargs):
@@ -215,7 +226,7 @@ def evaluate(router, *args, **kwargs):
 
         ntries -= 1
 
-    log(dict(event='output is None'))
+    extract_output_files(output)
 
     log(dict(event='done'))
 
