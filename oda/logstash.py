@@ -37,6 +37,9 @@ class LogStasher:
         self.context = c
     
     def log(self, msg):
+        if self.url is None:
+            print("fallback logstash:", msg)
+        
         HOST, PORT = self.url.split(":")
         PORT = int(PORT)
 

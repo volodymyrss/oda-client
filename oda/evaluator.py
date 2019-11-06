@@ -199,7 +199,7 @@ def evaluate(router, *args, **kwargs):
             output = odamodule.evaluate(*args, **kwargs)
             break
         except WorkflowIncomplete as e:
-            log("workflow incomplete:", e)
+            log("workflow incomplete: %s", e)
             
             if _async_return:
                 raise
