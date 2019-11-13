@@ -185,6 +185,14 @@ def extract_output_files(r):
             else:
                 print("writing", v)
     
+def extract_output_json(r):
+    o = {}
+
+    for k,v in r.items():
+        try:
+            o[k] = json.loads(v)
+        except Exception as e:
+            o[k] = v
 
 def evaluate(router, *args, **kwargs):
     if router == "graph":
@@ -227,6 +235,7 @@ def evaluate(router, *args, **kwargs):
         ntries -= 1
 
     extract_output_files(output)
+    extract_output_json(output)
 
     log(dict(event='done'))
 
