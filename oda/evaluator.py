@@ -190,8 +190,11 @@ def extract_output_json(r):
 
     for k,v in r.items():
         try:
+            print("trying to decode json",k)
             o[k] = json.loads(v)
+            print("decoded",o[k])
         except Exception as e:
+            print("failed to decode",e)
             o[k] = v
 
 def evaluate(router, *args, **kwargs):
