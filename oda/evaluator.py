@@ -197,6 +197,8 @@ def extract_output_json(r):
             print("failed to decode",e)
             o[k] = v
 
+    return o
+
 def evaluate(router, *args, **kwargs):
     if router == "graph":
         return evaluate_graph(*args)    
@@ -238,7 +240,7 @@ def evaluate(router, *args, **kwargs):
         ntries -= 1
 
     extract_output_files(output)
-    extract_output_json(output)
+    output = extract_output_json(output)
 
     log(dict(event='done'))
 
