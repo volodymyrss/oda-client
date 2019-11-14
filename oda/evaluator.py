@@ -203,7 +203,7 @@ def evaluate(router, *args, **kwargs):
     if router == "graph":
         return evaluate_graph(*args)    
 
-    ntries = 100
+    ntries = kwargs.pop('_ntries', 100)
 
     _async_return = kwargs.get("_async_return", False)
 
