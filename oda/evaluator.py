@@ -203,7 +203,7 @@ def evaluate(router, *args, **kwargs):
     if router == "graph":
         return evaluate_graph(*args)    
 
-    ntries = kwargs.pop('_ntries', 100)
+    ntries = kwargs.pop('_ntries', 1)
 
     _async_return = kwargs.get("_async_return", False)
 
@@ -230,10 +230,10 @@ def evaluate(router, *args, **kwargs):
         except Exception as e:
             log(dict(event='problem evaluating',exception=repr(e)))
 
-        if ntries <= 1:
-            #if sentry_sdk:
-            #    sentry_sdk.capture_exception()
-            raise
+            if ntries <= 1:
+                #if sentry_sdk:
+                #    sentry_sdk.capture_exception()
+                raise 
 
         time.sleep(5)
 
