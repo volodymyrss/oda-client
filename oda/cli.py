@@ -1,4 +1,4 @@
-from oda.evaluate import evaluate
+from oda.evaluator import evaluate
 import click
 from click_alias import ClickAliasedGroup
 
@@ -13,9 +13,9 @@ def info():
 
 @oda.command(aliases=["ev","eva","eval", "evaluate"])
 @click.argument('target', nargs=1)
-@click.argument('graphs', nargs=-1)
-def evaluate_cli(target, graphs):
-    return evaluate(target, *graphs)
+@click.argument('args', nargs=-1)
+def evaluate_cli(target, args):
+    return evaluate(target, *args)
         
 
 @oda.command()

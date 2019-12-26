@@ -77,7 +77,7 @@ default_prefix="""
 @prefix xml: <http://www.w3.org/XML/1998/namespace> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
-@prefix : <http://local#> .
+@prefix local: <http://local#> .
 
 """
 
@@ -92,7 +92,7 @@ def load_graph(G, serial):
     if serial.startswith("https://"):
         G.load(serial)
     else:
-        log("will load: %s", serial, level="DEBUG")
+        log("will load: %s", serial, level="INFO")
         G.parse(
             data=default_prefix + parse_shortcuts(serial), 
             format="turtle"
@@ -108,9 +108,12 @@ def evaluate_graph(target, *graphs):
         print("will load", graph)
         load_graph(G, graph)
     
-    load_graph(G, ":{t} rdfs:subClassOf an:{t} .".format(t=target))
+    print("will load standard assumption")
+    load_graph(G, "local:{t} rdfs:subClassOf an:{t} .".format(t=target))
 
-    q = "SELECT ?parent_analysis WHERE { :%s rdfs:subClassOf ?parent_analysis . }"%target
+    G.serialize("debug.ttl", format="turtle")
+
+    q = "SELECT ?parent_analysis WHERE {{ local:{} rdfs:subClassOf ?parent_analysis . }}".format(target)
     print(q)
 
     parentname=None
@@ -120,7 +123,7 @@ def evaluate_graph(target, *graphs):
         parentns, parentname = parent.split("#")
 
     if parentname is None:
-        warn("no useful parent!")
+        warn("no useful parent for {}!".format(target))
         return
             
     for url_uri in G.query("""SELECT DISTINCT ?url WHERE {an:%s an:url ?url}"""%parentname):
@@ -144,7 +147,7 @@ def evaluate_graph(target, *graphs):
         log("expects some values from: %s, %s", ns, paramname)
         
         for r in itertools.chain(G.query("""SELECT ?value WHERE {an:%s an:equalTo ?value .}"""%(paramname)),
-                                 G.query("""SELECT ?value WHERE {:%s an:equalTo ?value .}"""%(paramname)),
+                                 G.query("""SELECT ?value WHERE {local:%s an:equalTo ?value .}"""%(paramname)),
                                  G.query("""SELECT ?value WHERE {?a an:equalTo ?value . ?a rdfs:subClassOf an:%s .}"""%(paramname))):
 
             value = r[0].toPython()
@@ -165,7 +168,7 @@ def evaluate_graph(target, *graphs):
 
     r_h = hashlib.md5(r_str.encode('utf-8')).hexdigest()[:8]
 
-    load_graph(G, ":%s an:equalTo an:%s ."%(target, r_h))
+    load_graph(G, "local:%s an:equalTo an:%s ."%(target, r_h))
 
     G.serialize(target+".ttl", format="turtle")
 
@@ -203,7 +206,22 @@ def evaluate(router, *args, **kwargs):
     if router == "graph":
         return evaluate_graph(*args)    
 
-    ntries = kwargs.pop('_ntries', 1)
+    print("args", args)
+    print("kwargs", kwargs)
+
+    new_args=[]
+    for arg in args:
+        if "=" in arg:
+            k,v = arg.split("=")
+            kwargs[k] = v
+            print("extracted kw arg", k, v)
+        else:
+            new_args.append(arg)
+
+    args = new_args
+        
+
+    ntries = int(kwargs.pop('_ntries', 1))
 
     _async_return = kwargs.get("_async_return", False)
 
@@ -238,6 +256,10 @@ def evaluate(router, *args, **kwargs):
         time.sleep(5)
 
         ntries -= 1
+
+    if isinstance(output, str):
+        print("output is string, something failed", output)
+        return output
 
     extract_output_files(output)
     output = extract_output_json(output)
