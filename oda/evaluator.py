@@ -17,6 +17,10 @@ from oda.exceptions import WorkflowIncomplete
 
 from oda.graph import subgraph_from
 
+import odakb.sparql 
+from odakb.sparql import load_graph, parse_shortcuts
+
+
 #import oda.sentry as sentry
 
 import pkgutil
@@ -45,69 +49,21 @@ def find_worflow_route_modules():
     log("oda workflow modules: %s", workflow_modules)
     return workflow_modules
 
-def get_default_graphs():
-    graphs = []
 
-
-    for odahub_workflow in "oda-image", "integral-visibility", "integral-observation-summary":
-        url_base = "https://oda-workflows-{}.odahub.io".format(odahub_workflow)
-        graphs.append(url_base + "/api/v1.0/rdf")
-    
-        G = rdflib.Graph()
-
-        print("will load", graphs[-1])
-        load_graph(G, graphs[-1])
-
-        for w in G.query("SELECT ?w WHERE { ?w rdfs:subClassOf anal:WebDataAnalysis }"):
-            wns, wn = w[0].toPython().split("#")
-
-            log("in %s found %s", odahub_workflow, wn)
-            graphs.append("an:"+wn+" an:url \""+url_base+"/api/v1.0/get/"+wn+"\" .")
-            graphs.append("an:"+wn+" an:odahubService \""+odahub_workflow+"\" .")
-
-    return graphs
-
-
-default_prefix="""
-@prefix an: <http://ddahub.io/ontology/analysis#> .
-@prefix onto: <https://w3id.org/function/ontology#> .
-@prefix owl: <http://www.w3.org/2002/07/owl#> .
-@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
-@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
-@prefix xml: <http://www.w3.org/XML/1998/namespace> .
-@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
-
-@prefix local: <http://local#> .
-
-"""
-
-def parse_shortcuts(graph_serial):
-    g = graph_serial.replace("="," an:equalTo ")
-    if not g.strip().endswith("."):
-        g += " ."
-
-    return g
-
-def load_graph(G, serial):
-    if serial.startswith("https://"):
-        G.load(serial)
-    else:
-        log("will load: %s", serial, level="INFO")
-        G.parse(
-            data=default_prefix + parse_shortcuts(serial), 
-            format="turtle"
-        )
 
 def evaluate_graph(target, *graphs):
     """
     """
 
-    G = rdflib.Graph()
+    G = rdflib.Graph()  
 
-    for graph in list(graphs) + list(get_default_graphs()):
-        print("will load", graph)
+    #get_default_graphs(G)
+    odakb.sparql.process_graph_loaders(G)
+
+    for graph in graphs:
+        print("loading local graph", graph)
         load_graph(G, graph)
-    
+
     print("will load standard assumption")
     load_graph(G, "local:{t} rdfs:subClassOf an:{t} .".format(t=target))
 
@@ -126,22 +82,39 @@ def evaluate_graph(target, *graphs):
         warn("no useful parent for {}!".format(target))
         return
             
-    for url_uri in G.query("""SELECT DISTINCT ?url WHERE {an:%s an:url ?url}"""%parentname):
-        url = url_uri[0].toPython()
-        log("url: %s", url)
+    #for url_uri in G.query("""SELECT DISTINCT ?url WHERE {an:%s an:url ?url}"""%parentname):
+    #    url = url_uri[0].toPython()
+    #    log("url: %s", url)
     
-    odahub_services = []
+    workflows=[]
 
-    for uri in G.query("""SELECT DISTINCT ?url WHERE {an:%s an:odahubService ?url}"""%parentname):
-        odahub_service = uri[0].toPython()
-        log("found comptatible odahub service: %s", odahub_service)
-        odahub_services.append(odahub_service)
+    for uri in G.query("""
+            SELECT DISTINCT ?workflowClass WHERE {
+                an:%s rdfs:subClassOf ?workflowClass .
+                ?workflowClass rdfs:subClassOf an:Workflow .
+            }
+        """%parentname):
 
-    if odahub_services == []:
+        workflowClass = uri[0].toPython()
+
+        print("found workflowClass", workflowClass)
+
+        workflows.append(dict(parent="an:%s"%parentname, workflow_class=workflowClass))
+
+
+    if workflows == []:
         raise Exception("no services found for", target, parentname)
 
-    params={}
+    if len(workflows) == 0:
+        raise Exception("no workflows found")
+        
+    if len(workflows) > 1:
+        raise Exception("too many workflows found: %s"%str(workflows))
     
+    workflow = workflows[0]
+
+    params={}
+
     for param in G.query("""SELECT DISTINCT ?param WHERE {an:%s rdfs:subClassOf ?b . ?b owl:onProperty onto:expects . ?b owl:someValuesFrom ?param .}"""%parentname):
         ns, paramname = param[0].split("#")
         log("expects some values from: %s, %s", ns, paramname)
@@ -161,8 +134,38 @@ def evaluate_graph(target, *graphs):
                 print("request to another defined graph", name)
                 #evaluate_graph_workflow(qg, name)
 
-    import odahub
-    r = odahub.evaluate_retry(odahub_service, target, **params)
+    if workflow['workflow_class'] == "http://ddahub.io/ontology/analysis#odahubService":
+        for uri in G.query("""
+            SELECT DISTINCT ?odahubname WHERE {
+                %s an:odahubService ?odahubname .
+            }"""%workflow['parent']):
+
+            odahub_service = uri[0].toPython()
+
+            log("found comptatible odahub service: %s", odahub_service)
+            break
+
+        import odahub
+        r = odahub.evaluate_retry(odahub_service, target, **params, _ntries=20)
+
+    elif workflow['workflow_class'] == "http://ddahub.io/ontology/analysis#HTTPAnalysis":
+        for uri in G.query("""
+            SELECT DISTINCT ?url WHERE {
+                %s oda:url ?url .
+            }"""%workflow['parent']):
+
+            url = uri[0].toPython()
+
+            log("found url: \"%s\"", url)
+            break
+
+        c = requests.get(url, params=params)
+        
+        try:
+            r = c.json()
+        except Exception as e:
+            print("failed to get json response %s"%(str(e)))
+            r=dict(response_content=base64.b64encode(c.content).decode())
 
     r_str = json.dumps(r)
 
