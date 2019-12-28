@@ -8,3 +8,6 @@ upload: dist
 
 test:
 	python -m pytest tests -sv
+
+bump:
+	bump2version    --tag --commit patch  --verbose    --allow-dirty --tag
