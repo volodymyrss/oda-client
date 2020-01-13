@@ -50,12 +50,17 @@ def find_worflow_route_modules():
     return workflow_modules
 
 
+def evaluate_graph(target, *graphs):
+    """
+    """
+    pass
 
 def evaluate_graph(target, *graphs):
     """
     """
 
-    G = rdflib.Graph()  
+    G = rdflib.ConjunctiveGraph()  
+    #G = rdflib.Graph()  
 
     #get_default_graphs(G)
     odakb.sparql.process_graph_loaders(G)
@@ -68,6 +73,9 @@ def evaluate_graph(target, *graphs):
     load_graph(G, "local:{t} rdfs:subClassOf an:{t} .".format(t=target))
 
     G.serialize("debug.ttl", format="turtle")
+
+    for c in G.quads():
+        print("quad:", c)
 
     q = "SELECT ?parent_analysis WHERE {{ local:{} rdfs:subClassOf ?parent_analysis . }}".format(target)
     print(q)

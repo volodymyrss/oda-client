@@ -3,6 +3,7 @@ import json
 import sys
 import os
 
+import logging
 
 class LogStasher:
     def __init__(self, url = None):
@@ -28,7 +29,7 @@ class LogStasher:
                 break
             except Exception as e:
                 failures.append(("unable to get logstash entrypoint from method", method_name,"exception:",e))
-                print(*failures[-1])
+                logging.debug(*failures[-1])
 
         return logstash_entrypoint
                 
@@ -38,7 +39,7 @@ class LogStasher:
     
     def log(self, msg):
         if self.url is None:
-            print("fallback logstash:", msg)
+            logging.debug("fallback logstash:", msg)
             return
         
         HOST, PORT = self.url.split(":")
@@ -49,13 +50,13 @@ class LogStasher:
         try:
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         except Exception as e:
-            print("[ERROR] %s\n" % repr(e)) 
+            logging.error("[ERROR] %s\n" % repr(e)) 
             
 
         try:
             sock.connect((HOST, PORT))
         except Exception as e:
-            print("[ERROR] %s\n" % repr(e)) 
+            logging.error("[ERROR] %s\n" % repr(e)) 
 
         sock.send(json.dumps(msg).encode())
 
