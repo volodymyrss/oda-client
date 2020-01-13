@@ -1,4 +1,5 @@
 import os
+import logging
 
 try:
     import sentry_sdk
@@ -6,5 +7,5 @@ try:
 except ImportError:
     sentry_sdk = None
 except Exception as e:
-    print("unable to load sentry:",repr(e))
+    logging.debug("unable to load sentry:",repr(e))
     sentry_sdk = None
