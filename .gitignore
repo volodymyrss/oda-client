@@ -1,0 +1,5 @@
+*ttl
+*swp
+__pycache__
+*egg-info
+.eggs

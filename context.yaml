@@ -1,0 +1,6 @@
+git@gitlab.astro.unige.ch:savchenk/oda-testworkflow.git: &id001
+  callable_kind: http://odahub.io/callable/notebook
+  origin: git@gitlab.astro.unige.ch:savchenk/oda-testworkflow.git
+  path: code/git@gitlab.astro.unige.ch.savchenk.oda-testworkflow.git
+  version: 5b5a1db
+http://odahub.io/test/testw: *id001
