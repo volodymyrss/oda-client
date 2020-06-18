@@ -249,7 +249,10 @@ def evaluate(router, *args, **kwargs):
 
     while ntries > 0:
         try:
-            output = odamodule.evaluate(*args, **kwargs)
+            if hasattr(odamodule, 'evaluate'):
+                output = odamodule.evaluate(*args, **kwargs)
+            else:
+                output = odamodule.evaluator.evaluate(*args, **kwargs)
             break
         except WorkflowIncomplete as e:
             log("workflow incomplete: %s", e)

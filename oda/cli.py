@@ -1,6 +1,6 @@
 from oda.evaluator import evaluate
 import click
-from click_alias import ClickAliasedGroup
+from click_aliases import ClickAliasedGroup
 
 
 @click.group(cls=ClickAliasedGroup)
