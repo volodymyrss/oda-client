@@ -247,6 +247,8 @@ def evaluate(router, *args, **kwargs):
 
     odamodule = importlib.import_module(module_name)
 
+    output = None
+
     while ntries > 0:
         try:
             if hasattr(odamodule, 'evaluate'):
@@ -271,7 +273,7 @@ def evaluate(router, *args, **kwargs):
 
         ntries -= 1
 
-    if isinstance(output, str):
+    if output is None or isinstance(output, str):
         print("output is string, something failed", output)
         return output
 
