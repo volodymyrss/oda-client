@@ -1,5 +1,5 @@
 import logging
-import coloredlogs
+import coloredlogs # type: ignore
 import os
 
 from oda import logstash

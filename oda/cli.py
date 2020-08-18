@@ -1,6 +1,6 @@
 from oda.evaluator import evaluate
 import click
-from click_aliases import ClickAliasedGroup
+from click_aliases import ClickAliasedGroup # type: ignore
 
 
 @click.group(cls=ClickAliasedGroup)
@@ -26,13 +26,10 @@ def oda_list(aliases=["l","li","list"]):
 def rdf():
     pass
 
-def apidocs():
-    if router == "odahub":
-        return requests.get("https://oda-workflows-fermilat.odahub.io/apispec_1.json").json()
+#def apidocs():
+#    if router == "odahub":
+#        return requests.get("https://oda-workflows-fermilat.odahub.io/apispec_1.json").json()
 
-
-def module():
-    pass
 
 def module():
     #symmetric interoperability with astroquery

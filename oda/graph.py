@@ -1,4 +1,4 @@
-import rdflib
+import rdflib # type: ignore
 
 import logging
 

@@ -1,5 +1,6 @@
 import  pytest
 
+@pytest.mark.skip
 def test_simple():
     import oda.evaluator as r
     r.evaluate_graph("image",
@@ -15,6 +16,7 @@ def test_simple():
 
                 """)
 
+@pytest.mark.skip
 def test_simplified():
     import oda.evaluator as r
     r.evaluate_graph("image",
@@ -23,6 +25,7 @@ def test_simplified():
                 """)
 
 
+@pytest.mark.skip
 def test_simplified_url():
     import oda.evaluator as r
     r.evaluate_graph("spiacs-online",
@@ -30,6 +33,7 @@ def test_simplified_url():
     local:requeststring an:equalTo "3000.00 30" .
                 """)
 
+@pytest.mark.skip
 def test_graph_from_arg():
     import oda.evaluator as r
     r.evaluate_graph("image",

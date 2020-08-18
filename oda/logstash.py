@@ -39,7 +39,7 @@ class LogStasher:
     
     def log(self, msg):
         if self.url is None:
-            logging.debug("fallback logstash:", msg)
+            logging.debug("fallback logstash: %s", msg)
             return
         
         HOST, PORT = self.url.split(":")

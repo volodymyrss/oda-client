@@ -5,7 +5,7 @@ import os
 import base64
 import requests
 import time
-import rdflib
+import rdflib # type: ignore
 import tempfile
 import itertools
 import hashlib
@@ -17,7 +17,7 @@ from oda.exceptions import WorkflowIncomplete
 
 from oda.graph import subgraph_from
 
-import odakb.sparql 
+import odakb.sparql  # type: ignore
 from odakb.sparql import load_graph, parse_shortcuts
 
 
@@ -50,10 +50,6 @@ def find_worflow_route_modules():
     return workflow_modules
 
 
-def evaluate_graph(target, *graphs):
-    """
-    """
-    pass
 
 def evaluate_graph(target, *graphs):
     """
@@ -153,7 +149,7 @@ def evaluate_graph(target, *graphs):
             log("found comptatible odahub service: %s", odahub_service)
             break
 
-        import odahub
+        import odahub # type: ignore
         r = odahub.evaluate_retry(odahub_service, target, **params, _ntries=20)
 
     elif workflow['workflow_class'] == "http://ddahub.io/ontology/analysis#HTTPAnalysis":
@@ -288,9 +284,9 @@ def evaluate(router, *args, **kwargs):
 def rdf():
     pass
 
-def apidocs():
-    if router == "odahub":
-        return requests.get("https://oda-workflows-fermilat.odahub.io/apispec_1.json").json()
+#def apidocs():
+#    if router == "odahub":
+#        return requests.get("https://oda-workflows-fermilat.odahub.io/apispec_1.json").json()
 
 def module():
     #symmetric interoperability with astroquery
