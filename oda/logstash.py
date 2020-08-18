@@ -29,7 +29,7 @@ class LogStasher:
                 break
             except Exception as e:
                 failures.append(("unable to get logstash entrypoint from method", method_name,"exception:",e))
-                logging.debug(*failures[-1])
+                logging.debug(repr(*failures[-1]))
 
         return logstash_entrypoint
                 
