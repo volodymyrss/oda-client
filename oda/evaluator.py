@@ -204,7 +204,7 @@ def extract_output_json(r):
             o[k] = json.loads(v)
             print("decoded",o[k])
         except Exception as e:
-            print("failed to decode",e)
+            #print("failed to decode",e)
             o[k] = v
 
     return o
