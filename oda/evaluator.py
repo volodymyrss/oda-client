@@ -211,7 +211,7 @@ def extract_output_json(r):
 
 def evaluate(router, *args, **kwargs):
     if router == "graph":
-        return evaluate_graph(*args)    
+        return evaluate_graph(*args)
 
     print("args", args)
     print("kwargs", kwargs)
@@ -228,7 +228,7 @@ def evaluate(router, *args, **kwargs):
     args = new_args
         
 
-    ntries = int(kwargs.pop('_ntries', 1))
+    ntries = int(kwargs.pop('_ntries', 1)) # TODO: no need to have tries at this level
 
     _async_return = kwargs.get("_async_return", False)
 
@@ -263,7 +263,7 @@ def evaluate(router, *args, **kwargs):
             if ntries <= 1:
                 #if sentry_sdk:
                 #    sentry_sdk.capture_exception()
-                raise 
+                raise Exception(e)
 
         time.sleep(5)
 
