@@ -15,5 +15,5 @@ __doc__ = ast.get_docstring(mod)
 
 setup(description=__doc__.splitlines()[1],
       long_description=__doc__,
-      version = "1.3.29", 
+      version = "1.3.30", 
       setup_requires=setup_requires)
