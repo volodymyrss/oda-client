@@ -249,9 +249,15 @@ def evaluate(router, *args, **kwargs):
     while ntries > 0:
         try:
             if hasattr(odamodule, 'evaluate'):
-                output = odamodule.evaluate(*args, **kwargs)
+                r = odamodule.evaluate(*args, **kwargs)
             else:
-                output = odamodule.evaluator.evaluate(*args, **kwargs)
+                r = odamodule.evaluator.evaluate(*args, **kwargs)
+
+            if return_metadata:
+                metadata, output = r
+            else:
+                output = r
+
             break
         except WorkflowIncomplete as e:
             log("workflow incomplete: %s", e)
@@ -274,16 +280,15 @@ def evaluate(router, *args, **kwargs):
         print("output is string, something failed", output)
         return output
 
-    if return_metadata:
-        extract_output_files(output)
-        output = extract_output_json(output)
-    else:
-        extract_output_files(output[1])
-        output[1] = extract_output_json(output[1])
+    extract_output_files(output)
+    output = extract_output_json(output)
 
     log(dict(event='done'))
 
-    return output
+    if return_metadata:
+        return metadata, output
+    else:
+        return output
 
 
 def rdf():
