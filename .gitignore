@@ -7,3 +7,8 @@ build
 data
 dist
 code
+*.dot
+*.json
+*.ipynb
+*.html
+*.swo
