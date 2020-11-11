@@ -231,6 +231,7 @@ def evaluate(router, *args, **kwargs):
     ntries = int(kwargs.pop('_ntries', 1)) # TODO: no need to have tries at this level
 
     _async_return = kwargs.get("_async_return", False)
+    return_metadata = kwargs.get("_return_metadata", False)
 
     key = json.dumps((router, args, OrderedDict(sorted(kwargs.items()))))
 
@@ -273,8 +274,12 @@ def evaluate(router, *args, **kwargs):
         print("output is string, something failed", output)
         return output
 
-    extract_output_files(output)
-    output = extract_output_json(output)
+    if return_metadata:
+        extract_output_files(output)
+        output = extract_output_json(output)
+    else:
+        extract_output_files(output[1])
+        output[1] = extract_output_json(output[1])
 
     log(dict(event='done'))
 
