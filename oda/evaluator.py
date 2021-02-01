@@ -276,10 +276,10 @@ def evaluate(router, *args, **kwargs):
 
         ntries -= 1
 
-    if output is None or isinstance(output, str):
-        print("output is string, something failed", output)
+    if not isinstance(output, dict):
+        logger.error("output is not dict, something failed: instance of %s,  %s", output.__class__, output)
         return output
-
+    
     extract_output_files(output)
     output = extract_output_json(output)
 
