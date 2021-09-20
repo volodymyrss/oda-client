@@ -185,6 +185,10 @@ def evaluate_graph(target, *graphs):
     
 
 def extract_output_files(r):
+    if not isinstance(r, dict):
+        print(f"output should be dict, but found {r.__class__}: {r}")
+        return
+
     for k,v in r.items():
         if k+"_content" in r:
             try:
