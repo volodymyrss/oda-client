@@ -281,7 +281,7 @@ def evaluate(router, *args, **kwargs):
         ntries -= 1
 
     if not isinstance(output, dict):
-        logger.error("output is not dict, something failed: instance of %s,  %s", output.__class__, output)
+        log(f"output is not dict, something failed: instance of {output.__class__} {output}")
         return output
     
     extract_output_files(output)
